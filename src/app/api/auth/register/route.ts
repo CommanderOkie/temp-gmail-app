@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { kv } from '@vercel/kv';
+import { kv } from '@/app/lib/kv';
 import bcrypt from 'bcryptjs';
 import { loginUser } from '@/app/lib/session';
 
