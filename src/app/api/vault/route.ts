@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     }
 
     const inboxData = { email, inbox_id, tok, savedAt: new Date().toISOString() };
-    await kv.rpush(`vault:${session.userId}`, inboxData);
+    await kv.rpush(`vault:${session.userId}`, JSON.stringify(inboxData));
     
     return NextResponse.json({ success: true, message: 'Inbox saved to vault' });
   } catch (error) {
@@ -48,10 +48,13 @@ export async function DELETE(req: NextRequest) {
     if (!inbox_id) return NextResponse.json({ error: 'Missing inbox_id' }, { status: 400 });
 
     const existing = await kv.lrange(`vault:${session.userId}`, 0, -1);
-    const toRemove = existing.find((i: any) => i.inbox_id === inbox_id);
+    const toRemove = existing.find((i: any) => {
+      const parsed = typeof i === 'string' ? JSON.parse(i) : i;
+      return parsed.inbox_id === inbox_id;
+    });
     
     if (toRemove) {
-      await kv.lrem(`vault:${session.userId}`, 0, JSON.stringify(toRemove));
+      await kv.lrem(`vault:${session.userId}`, 0, typeof toRemove === 'string' ? toRemove : JSON.stringify(toRemove));
     }
 
     return NextResponse.json({ success: true, message: 'Inbox removed from vault' });
